@@ -20,9 +20,6 @@ namespace BlogApp.API.AutoMapper
             CreateMap<BlogCreateDto, Blog>();
             CreateMap<BlogUpdateDto, Blog>();
 
-
-
-
         }
     }
 }

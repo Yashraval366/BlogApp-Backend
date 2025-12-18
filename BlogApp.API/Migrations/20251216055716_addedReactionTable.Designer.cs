@@ -4,6 +4,7 @@ using BlogApp.API.Data.DBcontext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlogApp.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251216055716_addedReactionTable")]
+    partial class addedReactionTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -178,17 +181,18 @@ namespace BlogApp.API.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("ReactionType")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsLiked")
+                        .HasColumnType("bit");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("BlogId")
+                        .IsUnique();
 
-                    b.HasIndex("BlogId", "UserId")
+                    b.HasIndex("UserId")
                         .IsUnique();
 
                     b.ToTable("BlogsReactions");
@@ -339,7 +343,7 @@ namespace BlogApp.API.Migrations
             modelBuilder.Entity("BlogApp.API.Data.Entities.Blog", b =>
                 {
                     b.HasOne("BlogApp.API.Data.Entities.ApplicationUser", "ApplicationUser")
-                        .WithMany("Blogs")
+                        .WithMany()
                         .HasForeignKey("ApplicationUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -358,14 +362,14 @@ namespace BlogApp.API.Migrations
             modelBuilder.Entity("BlogApp.API.Data.Entities.BlogReaction", b =>
                 {
                     b.HasOne("BlogApp.API.Data.Entities.Blog", "Blog")
-                        .WithMany("Reactions")
-                        .HasForeignKey("BlogId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .WithOne()
+                        .HasForeignKey("BlogApp.API.Data.Entities.BlogReaction", "BlogId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("BlogApp.API.Data.Entities.ApplicationUser", "User")
-                        .WithMany("Reactions")
-                        .HasForeignKey("UserId")
+                        .WithOne()
+                        .HasForeignKey("BlogApp.API.Data.Entities.BlogReaction", "UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -423,18 +427,6 @@ namespace BlogApp.API.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("BlogApp.API.Data.Entities.ApplicationUser", b =>
-                {
-                    b.Navigation("Blogs");
-
-                    b.Navigation("Reactions");
-                });
-
-            modelBuilder.Entity("BlogApp.API.Data.Entities.Blog", b =>
-                {
-                    b.Navigation("Reactions");
                 });
 #pragma warning restore 612, 618
         }

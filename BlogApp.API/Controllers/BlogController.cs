@@ -28,7 +28,7 @@ namespace BlogApp.API.Controllers
             _mapper = mapper;
         }
 
-        // GET: api/blog
+        //GET: api/blog
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
@@ -36,20 +36,44 @@ namespace BlogApp.API.Controllers
             pageNumber = Math.Max(1, pageNumber);
             pageSize = Math.Clamp(pageSize, 1, 100);
 
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
             var query = _context.Blogs
-                .Include(e => e.Category)
-                .Include(e => e.ApplicationUser)
                 .Where(e => e.BlogVisibility == Enums.BlogVisibility.Public)
+                .Select(e => new BlogResponseDto
+                {
+                    Id = e.Id,
+                    Title = e.Title,
+                    Description = e.Description,
+
+                    AuthorId = e.ApplicationUserId,
+                    AuthorName = e.ApplicationUser!.FullName,
+
+                    CategoryId = e.CategoryId,
+                    CategoryName = e.Category!.Name,
+
+                    BlogVisibility = e.BlogVisibility,
+
+                    LikeCounts = e.Reactions!.Count(r => r.ReactionType == Enums.ReactionEnum.Liked),
+                    DislikeCounts = e.Reactions!.Count(r => r.ReactionType == Enums.ReactionEnum.Disliked),
+
+                    UserReaction = e.Reactions
+                            .Where(w => w.UserId == userId)
+                            .Select(r => (int?)r.ReactionType)
+                            .FirstOrDefault(),
+
+                    CreatedAt = e.CreatedAt,
+                    LastUpdatedAt = e.LastUpdatedAt
+
+                })
                 .AsNoTracking()
                 .OrderBy(e => e.Id);
-                
-            var pagedEntities = await PaginatedList<Blog>.CreateAsync(query, pageNumber, pageSize);
 
-            var dtoItems = _mapper.Map<List<BlogResponseDto>>(pagedEntities.Items);
+            var pagedEntities = await PaginatedList<BlogResponseDto>.CreateAsync(query, pageNumber, pageSize);
 
             var result = new
             {
-                items = dtoItems,
+                items = pagedEntities.Items,
                 pageNumber = pagedEntities.PageIndex,
                 pageSize = pagedEntities.PageSize,
                 totalCount = pagedEntities.TotalCount,
@@ -59,23 +83,57 @@ namespace BlogApp.API.Controllers
             return Ok(Response<object>.Ok(result, "Blogs fetched"));
         }
 
-        [HttpGet("/userblogs/{userId}")]
-        public async Task<IActionResult> GetBlogsByUserId(int userId)
+        [HttpGet("userblogs/{userId}")]
+        public async Task<IActionResult> GetBlogsByUserId(int userId,[FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
 
-            var blogs = await _context.Blogs
-                .Include(e => e.Category)
-                .Include(e => e.ApplicationUser)
-                .Where(e => e.ApplicationUserId == userId).ToListAsync();
+            var query = _context.Blogs
+                .Where(e => e.ApplicationUserId == userId)
+                .Select(e => new BlogResponseDto
+                {
+                    Id = e.Id,
+                    Title = e.Title,
+                    Description = e.Description,
 
-            if(blogs == null)
+                    AuthorId = e.ApplicationUserId,
+                    AuthorName = e.ApplicationUser.FullName,
+
+                    CategoryId = e.CategoryId,
+                    CategoryName = e.Category!.Name,
+
+                    BlogVisibility = e.BlogVisibility,
+
+                    LikeCounts = e.Reactions!.Count(r => r.ReactionType == Enums.ReactionEnum.Liked),
+                    DislikeCounts = e.Reactions!.Count(r => r.ReactionType == Enums.ReactionEnum.Disliked),
+
+                    UserReaction = e.Reactions
+                            .Where(w => w.UserId == userId)
+                            .Select(r => (int?)r.ReactionType)
+                            .FirstOrDefault(),
+
+                    CreatedAt = e.CreatedAt,
+                    LastUpdatedAt = e.LastUpdatedAt
+                })
+                .AsNoTracking()
+                .OrderBy(e => e.Id);
+
+            var pagedEntities = await PaginatedList<BlogResponseDto>.CreateAsync(query, pageNumber, pageSize);
+
+            var result = new
             {
-                return NotFound(Response<object>.Fail($"No Blogs Found for user {userId}"));
+                items = pagedEntities.Items,
+                pageNumber = pagedEntities.PageIndex,
+                pageSize = pagedEntities.PageSize,
+                totalCount = pagedEntities.TotalCount,
+                totalPages = pagedEntities.TotalPages
+            };
+
+            if (result.items.Count == 0)
+            {
+                return Ok(Response<object>.Fail("No Blogs Found"));
             }
 
-            var dto = _mapper.Map<List<BlogResponseDto>>(blogs);
-
-            return Ok(Response<List<BlogResponseDto>>.Ok(dto, "Blogs fetched successfully"));
+            return Ok(Response<object>.Ok(result, "Blogs fetched"));
 
         }
 

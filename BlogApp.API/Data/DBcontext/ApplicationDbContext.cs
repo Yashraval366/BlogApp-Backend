@@ -17,16 +17,15 @@ namespace BlogApp.API.Data.DBcontext
 
         public DbSet<Blog> Blogs { get; set; }
 
+        public DbSet<BlogReaction> BlogsReactions { get; set; }
+
         public DbSet<ApplicationUser> Users { get; set; } 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
 
-            optionsBuilder.ConfigureWarnings(warning =>
-            {
-                warning.Log(RelationalEventId.PendingModelChangesWarning);
-            });
+            optionsBuilder.ConfigureWarnings(warning => warning.Log(RelationalEventId.PendingModelChangesWarning));
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -57,6 +56,22 @@ namespace BlogApp.API.Data.DBcontext
                         Name = "Films"
                     }
                 );
+
+            builder.Entity<BlogReaction>()
+                .HasOne(e => e.User)
+                .WithMany(q => q.Reactions)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<BlogReaction>()
+                .HasOne(e => e.Blog)
+                .WithMany(q => q.Reactions)
+                .HasForeignKey(c => c.BlogId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<BlogReaction>()
+              .HasIndex(x => new { x.BlogId, x.UserId })
+              .IsUnique();
         }
     }
 }

@@ -6,7 +6,9 @@ namespace BlogApp.API.Data.Entities
     {
         public string FullName { get; set; }
 
-        ICollection<Blog>? Blogs { get; set; }
+        public ICollection<Blog>? Blogs { get; set; }
+
+        public ICollection<BlogReaction>? Reactions { get; set; }
 
     }
 }

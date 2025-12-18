@@ -16,5 +16,10 @@ namespace BlogApp.API.DTOs.Response
 
         public DateTime CreatedAt { get; set; }
         public DateTime? LastUpdatedAt { get; set; }
+
+        public int LikeCounts { get; set; }
+
+        public int DislikeCounts { get; set; }
+        public int? UserReaction {  get; set; }
     }
 }

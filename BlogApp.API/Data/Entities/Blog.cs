@@ -29,7 +29,9 @@ namespace BlogApp.API.Data.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         
-        public DateTime? LastUpdatedAt { get; set; } 
+        public DateTime? LastUpdatedAt { get; set; }
+
+        public ICollection<BlogReaction>? Reactions { get; set; }
 
     }
 }

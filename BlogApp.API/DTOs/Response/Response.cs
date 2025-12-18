@@ -21,7 +21,6 @@ namespace BlogApp.API.DTOs.Response
                 Data = data,
             };
         }
-
         public static Response<T> Fail(string message, List<string>? errors = null)
         {
             return new Response<T>

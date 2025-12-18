@@ -4,6 +4,7 @@ using BlogApp.API.Data.DBcontext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlogApp.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251216064915_revertingReactionTable")]
+    partial class revertingReactionTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -164,36 +167,6 @@ namespace BlogApp.API.Migrations
                     b.ToTable("Blogs");
                 });
 
-            modelBuilder.Entity("BlogApp.API.Data.Entities.BlogReaction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BlogId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("ReactionType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("BlogId", "UserId")
-                        .IsUnique();
-
-                    b.ToTable("BlogsReactions");
-                });
-
             modelBuilder.Entity("BlogApp.API.Data.Entities.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -339,7 +312,7 @@ namespace BlogApp.API.Migrations
             modelBuilder.Entity("BlogApp.API.Data.Entities.Blog", b =>
                 {
                     b.HasOne("BlogApp.API.Data.Entities.ApplicationUser", "ApplicationUser")
-                        .WithMany("Blogs")
+                        .WithMany()
                         .HasForeignKey("ApplicationUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -353,25 +326,6 @@ namespace BlogApp.API.Migrations
                     b.Navigation("ApplicationUser");
 
                     b.Navigation("Category");
-                });
-
-            modelBuilder.Entity("BlogApp.API.Data.Entities.BlogReaction", b =>
-                {
-                    b.HasOne("BlogApp.API.Data.Entities.Blog", "Blog")
-                        .WithMany("Reactions")
-                        .HasForeignKey("BlogId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BlogApp.API.Data.Entities.ApplicationUser", "User")
-                        .WithMany("Reactions")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Blog");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -423,18 +377,6 @@ namespace BlogApp.API.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("BlogApp.API.Data.Entities.ApplicationUser", b =>
-                {
-                    b.Navigation("Blogs");
-
-                    b.Navigation("Reactions");
-                });
-
-            modelBuilder.Entity("BlogApp.API.Data.Entities.Blog", b =>
-                {
-                    b.Navigation("Reactions");
                 });
 #pragma warning restore 612, 618
         }
