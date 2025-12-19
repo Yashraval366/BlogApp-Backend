@@ -57,6 +57,8 @@ namespace BlogApp.API.Controllers
                     LikeCounts = e.Reactions!.Count(r => r.ReactionType == Enums.ReactionEnum.Liked),
                     DislikeCounts = e.Reactions!.Count(r => r.ReactionType == Enums.ReactionEnum.Disliked),
 
+                    CommentCounts = e.Comments!.Count(c => !c.IsDeleted),
+
                     UserReaction = e.Reactions
                             .Where(w => w.UserId == userId)
                             .Select(r => (int?)r.ReactionType)
@@ -105,6 +107,7 @@ namespace BlogApp.API.Controllers
 
                     LikeCounts = e.Reactions!.Count(r => r.ReactionType == Enums.ReactionEnum.Liked),
                     DislikeCounts = e.Reactions!.Count(r => r.ReactionType == Enums.ReactionEnum.Disliked),
+                    CommentCounts = e.Comments!.Count(c => !c.IsDeleted),
 
                     UserReaction = e.Reactions
                             .Where(w => w.UserId == userId)
@@ -138,19 +141,47 @@ namespace BlogApp.API.Controllers
         }
 
         // GET: api/blog/{id}
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
+
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
             var blog = await _context.Blogs
-                .Include(b => b.Category)
-                .Include(b => b.ApplicationUser)
-                .FirstOrDefaultAsync(b => b.Id == id);
+                .Where(e => e.Id == id)
+                .Select(e => new BlogResponseDto
+                {
+                    Id = e.Id,
+                    Title = e.Title,
+                    Description = e.Description,
+
+                    AuthorId = e.ApplicationUserId,
+                    AuthorName = e.ApplicationUser.FullName,
+
+                    CategoryId = e.CategoryId,
+                    CategoryName = e.Category!.Name,
+
+                    BlogVisibility = e.BlogVisibility,
+
+                    LikeCounts = e.Reactions!.Count(r => r.ReactionType == Enums.ReactionEnum.Liked),
+                    DislikeCounts = e.Reactions!.Count(r => r.ReactionType == Enums.ReactionEnum.Disliked),
+                    CommentCounts = e.Comments!.Count(c => !c.IsDeleted),
+
+                    UserReaction = e.Reactions
+                            .Where(w => w.UserId == userId)
+                            .Select(r => (int?)r.ReactionType)
+                            .FirstOrDefault(),
+
+                    CreatedAt = e.CreatedAt,
+                    LastUpdatedAt = e.LastUpdatedAt
+                })
+                .FirstOrDefaultAsync();
 
             if (blog == null)
                 return NotFound(Response<string>.Fail("Blog not found"));
-
-            var dto = _mapper.Map<BlogResponseDto>(blog);
-            return Ok(Response<BlogResponseDto>.Ok(dto));
+          
+            return Ok(Response<BlogResponseDto>.Ok(blog,"blog fetched"));
         }
 
         // POST: api/blog

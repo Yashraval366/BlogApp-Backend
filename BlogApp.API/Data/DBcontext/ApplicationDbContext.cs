@@ -19,6 +19,8 @@ namespace BlogApp.API.Data.DBcontext
 
         public DbSet<BlogReaction> BlogsReactions { get; set; }
 
+        public DbSet<Comment> Comments { get; set; }
+
         public DbSet<ApplicationUser> Users { get; set; } 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -72,6 +74,24 @@ namespace BlogApp.API.Data.DBcontext
             builder.Entity<BlogReaction>()
               .HasIndex(x => new { x.BlogId, x.UserId })
               .IsUnique();
+
+            builder.Entity<Comment>()
+                .HasOne(e => e.User)
+                .WithMany(q => q.Comments)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Comment>()
+                .HasOne(e => e.Blog)
+                .WithMany(q => q.Comments)
+                .HasForeignKey(c => c.BlogId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Comment>()
+                .HasOne(e => e.ParentComment)
+                .WithMany(q => q.Replies)
+                .HasForeignKey(c => c.ParentCommentId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

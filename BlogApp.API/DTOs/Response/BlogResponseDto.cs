@@ -21,5 +21,6 @@ namespace BlogApp.API.DTOs.Response
 
         public int DislikeCounts { get; set; }
         public int? UserReaction {  get; set; }
+        public int CommentCounts { get; set; }
     }
 }
